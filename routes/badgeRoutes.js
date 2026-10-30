@@ -1,0 +1,13 @@
+const express=require("express");
+const asyncHandler=require("../utils/asyncHandler");
+const c=require("../controllers/badgeController");
+const {authMiddleware}=require("../middleware/authMiddleware");
+const optionalAuthMiddleware=require("../middleware/optionalAuthMiddleware");
+const router=express.Router();
+router.get("/",optionalAuthMiddleware,asyncHandler(c.catalog));
+router.get("/me",authMiddleware,asyncHandler(c.mine));
+router.post("/me/refresh",authMiddleware,asyncHandler(c.refresh));
+router.put("/me/equipped/:code",authMiddleware,asyncHandler(c.equip));
+router.delete("/me/equipped",authMiddleware,asyncHandler(c.unequip));
+router.get("/users/:username",asyncHandler(c.publicBadges));
+module.exports=router;
