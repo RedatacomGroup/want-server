@@ -1,0 +1,15 @@
+const express=require("express");
+const asyncHandler=require("../utils/asyncHandler");
+const {authMiddleware}=require("../middleware/authMiddleware");
+const {requireAdmin}=require("../middleware/adminMiddleware");
+const {validate}=require("../middleware/validateMiddleware");
+const {reportDecisionSchema,desireModerationSchema}=require("../validators/moderationValidators");
+const c=require("../controllers/adminController");
+const router=express.Router();
+router.use(authMiddleware,requireAdmin());
+router.get("/reports",asyncHandler(c.reports));
+router.patch("/reports/:reportId",validate(reportDecisionSchema),asyncHandler(c.decideReport));
+router.get("/desires",asyncHandler(c.desires));
+router.patch("/desires/:desireId",validate(desireModerationSchema),asyncHandler(c.moderateDesire));
+router.get("/users",asyncHandler(c.users));
+module.exports=router;

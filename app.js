@@ -91,6 +91,12 @@ const notificationRoutes =
 const desireDnaRoutes =
   require("./routes/desireDnaRoutes");
 
+  const reportRoutes =
+  require("./routes/reportRoutes");
+
+const adminRoutes =
+  require("./routes/adminRoutes");
+
 /*
 |--------------------------------------------------------------------------
 | Error Middleware
@@ -547,6 +553,16 @@ app.use(
 app.use(
   `${env.apiPrefix}/desire-dna`,
   desireDnaRoutes
+);
+
+app.use(
+  `${env.apiPrefix}/reports`,
+  reportRoutes
+);
+
+app.use(
+  `${env.apiPrefix}/admin`,
+  adminRoutes
 );
 
 /*
