@@ -238,4 +238,45 @@ const getMe = async (userId) => {
   return sanitizeUser(user);
 };
 
-module.exports = { register, login, refresh, logout, getMe };
+const checkUsernameAvailability = async (username) => {
+  const normalizedUsername = normalizeUsername(username);
+
+  if (!USERNAME_REGEX.test(normalizedUsername)) {
+    return {
+      username: normalizedUsername,
+      available: false,
+      valid: false,
+      message: "Username must be 3-30 characters using letters, numbers, or underscores.",
+    };
+  }
+
+  const result = await db.query(
+    `SELECT 1
+     FROM wants.users
+     WHERE lower(username)=lower($1)
+       AND deleted_at IS NULL
+     LIMIT 1`,
+    [normalizedUsername],
+  );
+
+  const available = result.rowCount === 0;
+
+  return {
+    username: normalizedUsername,
+    available,
+    valid: true,
+    message: available
+      ? `@${normalizedUsername} is available.`
+      : `@${normalizedUsername} is already taken.`,
+  };
+};
+
+
+module.exports = {
+  register,
+  login,
+  refresh,
+  logout,
+  getMe,
+  checkUsernameAvailability,
+};

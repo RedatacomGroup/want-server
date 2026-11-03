@@ -2,7 +2,6 @@ const db = require("../config/db");
 const { AppError } = require("../middleware/errorMiddleware");
 
 const AGE_BANDS = new Set(["18-24", "25-34", "35-44", "45-54", "55-64", "65+"]);
-const USERNAME_REGEX = /^[A-Za-z0-9_]{3,30}$/;
 
 const cleanNullableText = (value, maxLength, field) => {
   if (value === undefined) return undefined;
@@ -116,23 +115,19 @@ const getMe = async (userId) => {
 };
 
 const updateMe = async (userId, body) => db.withTransaction(async (client) => {
-  const allowedUser = new Set(["username"]);
   const allowedProfile = new Set([
     "displayName", "bio", "profileImageUrl", "countryCode", "region", "city",
     "ageBand", "gender", "favoriteColors", "profileVisibility", "showCountry"
   ]);
-  const supplied = Object.keys(body || {});
-  const unsupported = supplied.filter((key) => !allowedUser.has(key) && !allowedProfile.has(key));
-  if (unsupported.length) {
-    throw new AppError(`Unsupported profile fields: ${unsupported.join(", ")}`, 400, "UNSUPPORTED_PROFILE_FIELDS");
-  }
 
-  if (body.username !== undefined) {
-    const username = String(body.username).trim();
-    if (!USERNAME_REGEX.test(username)) {
-      throw new AppError("Username must be 3-30 characters using letters, numbers, or underscores.", 400, "INVALID_USERNAME");
-    }
-    await client.query(`UPDATE wants.users SET username=$2, updated_at=now() WHERE id=$1`, [userId, username]);
+  const supplied = Object.keys(body || {});
+  const unsupported = supplied.filter((key) => !allowedProfile.has(key));
+  if (unsupported.length) {
+    throw new AppError(
+      `Unsupported profile fields: ${unsupported.join(", ")}`,
+      400,
+      "UNSUPPORTED_PROFILE_FIELDS"
+    );
   }
 
   const assignments = [];
@@ -157,27 +152,65 @@ const updateMe = async (userId, body) => db.withTransaction(async (client) => {
   if (gender !== undefined) add("gender", gender);
 
   if (body.countryCode !== undefined) {
-    const countryCode = body.countryCode === null || String(body.countryCode).trim() === "" ? null : String(body.countryCode).trim().toUpperCase();
-    if (countryCode && !/^[A-Z]{2}$/.test(countryCode)) throw new AppError("Country code must contain two letters.", 400, "INVALID_COUNTRY_CODE");
+    const countryCode =
+      body.countryCode === null || String(body.countryCode).trim() === ""
+        ? null
+        : String(body.countryCode).trim().toUpperCase();
+    if (countryCode && !/^[A-Z]{2}$/.test(countryCode)) {
+      throw new AppError(
+        "Country code must contain two letters.",
+        400,
+        "INVALID_COUNTRY_CODE"
+      );
+    }
     add("country_code", countryCode);
   }
+
   if (body.ageBand !== undefined) {
-    if (!AGE_BANDS.has(body.ageBand)) throw new AppError("Select a valid age band.", 400, "INVALID_AGE_BAND");
+    if (!AGE_BANDS.has(body.ageBand)) {
+      throw new AppError("Select a valid age band.", 400, "INVALID_AGE_BAND");
+    }
     add("age_band", body.ageBand);
   }
-  if (body.favoriteColors !== undefined) add("favorite_colors", normalizeStringArray(body.favoriteColors, 10, "favoriteColors"));
+
+  if (body.favoriteColors !== undefined) {
+    add(
+      "favorite_colors",
+      normalizeStringArray(body.favoriteColors, 10, "favoriteColors")
+    );
+  }
+
   if (body.profileVisibility !== undefined) {
-    if (!["public", "private"].includes(body.profileVisibility)) throw new AppError("profileVisibility must be public or private.", 400, "INVALID_VISIBILITY");
+    if (!["public", "private"].includes(body.profileVisibility)) {
+      throw new AppError(
+        "profileVisibility must be public or private.",
+        400,
+        "INVALID_VISIBILITY"
+      );
+    }
     add("profile_visibility", body.profileVisibility);
   }
+
   if (body.showCountry !== undefined) {
-    if (typeof body.showCountry !== "boolean") throw new AppError("showCountry must be boolean.", 400, "INVALID_PROFILE_FIELD");
+    if (typeof body.showCountry !== "boolean") {
+      throw new AppError(
+        "showCountry must be boolean.",
+        400,
+        "INVALID_PROFILE_FIELD"
+      );
+    }
     add("show_country", body.showCountry);
   }
 
   if (assignments.length) {
-    await client.query(`UPDATE wants.user_profiles SET ${assignments.join(", ")}, updated_at=now() WHERE user_id=$1`, values);
+    await client.query(
+      `UPDATE wants.user_profiles
+       SET ${assignments.join(", ")}, updated_at=now()
+       WHERE user_id=$1`,
+      values
+    );
   }
+
   return getMe(userId);
 });
 

@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const authService = require("../services/authService");
 const { AppError } = require("../middleware/errorMiddleware");
+const passwordRecoveryService = require("../services/passwordRecoveryService");
 
 const ipHashFromRequest = (req) => {
   if (!req.ip) return null;
@@ -40,4 +41,26 @@ const me = async (req, res) => {
   res.status(200).json({ success: true, user, requestId: req.requestId });
 };
 
-module.exports = { register, login, refresh, logout, me };
+const usernameAvailability = async (req, res) => {
+  const result = await authService.checkUsernameAvailability(req.query.username);
+  res.status(200).json({
+    success: true,
+    ...result,
+    requestId: req.requestId,
+  });
+};
+
+const forgotPassword = async (req,res) => res.json({success:true,...await passwordRecoveryService.requestResetCode(req.body),requestId:req.requestId});
+const verifyResetCode = async (req,res) => res.json({success:true,...await passwordRecoveryService.verifyResetCode(req.body),requestId:req.requestId});
+const resetPassword = async (req,res) => res.json({success:true,...await passwordRecoveryService.resetPassword(req.body),requestId:req.requestId});
+
+module.exports = {
+  register,
+  login,
+  refresh,
+  logout,
+  me,
+  usernameAvailability,
+  forgotPassword, verifyResetCode, resetPassword,
+};
+

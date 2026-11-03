@@ -3,12 +3,14 @@ const asyncHandler = require("../utils/asyncHandler");
 const userController = require("../controllers/userController");
 const { authMiddleware } = require("../middleware/authMiddleware");
 const { validate } = require("../middleware/validateMiddleware");
+const { singleProfileImage } = require("../middleware/uploadMiddleware");
 const { updateProfileSchema, interestsSchema, colorsSchema, onboardingSchema } = require("../validators/userValidators");
 
 const router = express.Router();
 router.get("/interests", asyncHandler(userController.getAvailableInterests));
 router.get("/me", authMiddleware, asyncHandler(userController.getMe));
 router.patch("/me", authMiddleware, validate(updateProfileSchema), asyncHandler(userController.updateMe));
+router.patch("/me/avatar", authMiddleware, singleProfileImage, asyncHandler(userController.updateAvatar));
 router.put("/me/interests", authMiddleware, validate(interestsSchema), asyncHandler(userController.updateInterests));
 router.put("/me/colors", authMiddleware, validate(colorsSchema), asyncHandler(userController.updateColors));
 router.post("/me/onboarding", authMiddleware, validate(onboardingSchema), asyncHandler(userController.completeOnboarding));

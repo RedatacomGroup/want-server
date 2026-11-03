@@ -1,7 +1,15 @@
-const { z, username, password, ageBand, countryCode, nonEmptySlug, colorArray } = require("./commonValidators");
+const {
+  z,
+  username,
+  password,
+  ageBand,
+  countryCode,
+  nonEmptySlug,
+  colorArray,
+} = require("./commonValidators");
 
 const registerSchema = z.strictObject({
-  email: z.string().trim().email().max(254).transform((v) => v.toLowerCase()),
+  email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
   username,
   password,
   ageBand,
@@ -15,7 +23,34 @@ const loginSchema = z.strictObject({
   password: z.string().min(1).max(72),
 });
 
-const refreshSchema = z.strictObject({ refreshToken: z.string().min(20).max(4096) });
-const logoutSchema = z.strictObject({ refreshToken: z.string().min(20).max(4096) });
+const refreshSchema = z.strictObject({
+  refreshToken: z.string().min(20).max(4096),
+});
 
-module.exports = { registerSchema, loginSchema, refreshSchema, logoutSchema };
+const logoutSchema = z.strictObject({
+  refreshToken: z.string().min(20).max(4096),
+});
+
+const forgotPasswordSchema = z.strictObject({
+  email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
+});
+
+const verifyResetCodeSchema = z.strictObject({
+  email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
+  code: z.string().trim().regex(/^\d{6}$/, "Enter the six-digit verification code."),
+});
+
+const resetPasswordSchema = z.strictObject({
+  resetToken: z.string().min(20).max(512),
+  newPassword: password,
+});
+
+module.exports = {
+  registerSchema,
+  loginSchema,
+  refreshSchema,
+  logoutSchema,
+  forgotPasswordSchema,
+  verifyResetCodeSchema,
+  resetPasswordSchema,
+};

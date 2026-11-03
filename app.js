@@ -97,6 +97,9 @@ const desireDnaRoutes =
 const adminRoutes =
   require("./routes/adminRoutes");
 
+  const socialRoutes = 
+  require("./routes/socialRoutes");
+
 /*
 |--------------------------------------------------------------------------
 | Error Middleware
@@ -563,6 +566,11 @@ app.use(
 app.use(
   `${env.apiPrefix}/admin`,
   adminRoutes
+);
+
+app.use(
+  `${env.apiPrefix}/social`,
+  socialRoutes
 );
 
 /*
